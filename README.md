@@ -168,10 +168,6 @@ npm run serve
 - 后端API: http://localhost:3000
 - 管理后台: http://localhost:8080/admin
 
-## 开发团队
-
-本项目为毕业设计项目
-
 ## 许可证
 
 MIT License
@@ -179,9 +175,6 @@ MIT License
 ## 联系方式
 
 如有问题，请通过以下方式联系：
-- Email: your-email@example.com
-- GitHub Issues: [项目地址]
+- Email: 1125933779@qq.com
 
----
 
-**注意**: 本系统为教学示例项目，生产环境使用需要进行安全加固和性能优化。
