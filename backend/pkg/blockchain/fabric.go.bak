@@ -1,0 +1,210 @@
+package blockchain
+
+import (
+	"encoding/json"
+	"fmt"
+	"log"
+	localconfig "woodcarving-backend/config"
+
+	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
+	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
+)
+
+var contract *gateway.Contract
+
+// InitFabric 初始化Fabric连接
+func InitFabric() error {
+	cfg := localconfig.GlobalConfig.Fabric
+
+	wallet, err := gateway.NewFileSystemWallet("wallet")
+	if err != nil {
+		return fmt.Errorf("创建钱包失败: %v", err)
+	}
+
+	if !wallet.Exists(cfg.UserName) {
+		return fmt.Errorf("用户身份不存在")
+	}
+
+	gw, err := gateway.Connect(
+		gateway.WithConfig(config.FromFile(cfg.ConfigPath)),
+		gateway.WithIdentity(wallet, cfg.UserName),
+	)
+	if err != nil {
+		return fmt.Errorf("连接网关失败: %v", err)
+	}
+
+	network, err := gw.GetNetwork(cfg.ChannelName)
+	if err != nil {
+		return fmt.Errorf("获取网络失败: %v", err)
+	}
+
+	contract = network.GetContract(cfg.ChaincodeName)
+
+	log.Println("Fabric SDK初始化成功")
+	return nil
+}
+
+// CreateRawMaterial 创建原料
+func CreateRawMaterial(materialID, woodType, origin, harvestCert, supplierID, supplierName string,
+	quantity float64, quality, certHash string) (string, error) {
+
+	result, err := contract.SubmitTransaction("CreateRawMaterial",
+		materialID, woodType, origin, harvestCert, supplierID, supplierName,
+		fmt.Sprintf("%.2f", quantity), quality, certHash)
+
+	if err != nil {
+		return "", fmt.Errorf("创建原料失败: %v", err)
+	}
+
+	return string(result), nil
+}
+
+// CreateProduct 创建产品
+func CreateProduct(productID, productName, materialID, artisanID, artisanName, dimensions string,
+	weight float64, craftDesc, designHash, imageHash string, carveTime int) (string, error) {
+
+	result, err := contract.SubmitTransaction("CreateProduct",
+		productID, productName, materialID, artisanID, artisanName, dimensions,
+		fmt.Sprintf("%.2f", weight), craftDesc, designHash, imageHash, fmt.Sprintf("%d", carveTime))
+
+	if err != nil {
+		return "", fmt.Errorf("创建产品失败: %v", err)
+	}
+
+	return string(result), nil
+}
+
+// TransferMaterial 转移原料
+func TransferMaterial(materialID, toOwner, toName, location, remarks string) (string, error) {
+	result, err := contract.SubmitTransaction("TransferMaterial",
+		materialID, toOwner, toName, location, remarks)
+
+	if err != nil {
+		return "", fmt.Errorf("转移原料失败: %v", err)
+	}
+
+	return string(result), nil
+}
+
+// TransferProduct 转移产品
+func TransferProduct(productID, toOwner, toName, transferType, location, remarks string) (string, error) {
+	result, err := contract.SubmitTransaction("TransferProduct",
+		productID, toOwner, toName, transferType, location, remarks)
+
+	if err != nil {
+		return "", fmt.Errorf("转移产品失败: %v", err)
+	}
+
+	return string(result), nil
+}
+
+// RecordStorage 记录仓储信息
+func RecordStorage(productID, operationType, warehouseID, location string,
+	temperature, humidity float64, operatorID, operatorName, remarks string) (string, error) {
+
+	result, err := contract.SubmitTransaction("RecordStorage",
+		productID, operationType, warehouseID, location,
+		fmt.Sprintf("%.2f", temperature), fmt.Sprintf("%.2f", humidity),
+		operatorID, operatorName, remarks)
+
+	if err != nil {
+		return "", fmt.Errorf("记录仓储失败: %v", err)
+	}
+
+	return string(result), nil
+}
+
+// RecordSales 记录销售信息
+func RecordSales(productID, orderID, sellerID, sellerName, buyerName, buyerContact string,
+	price float64, saleDate, trackingNo, status string) (string, error) {
+
+	result, err := contract.SubmitTransaction("RecordSales",
+		productID, orderID, sellerID, sellerName, buyerName, buyerContact,
+		fmt.Sprintf("%.2f", price), saleDate, trackingNo, status)
+
+	if err != nil {
+		return "", fmt.Errorf("记录销售失败: %v", err)
+	}
+
+	return string(result), nil
+}
+
+// GetMaterialByID 查询原料
+func GetMaterialByID(materialID string) (map[string]interface{}, error) {
+	result, err := contract.EvaluateTransaction("GetMaterialByID", materialID)
+	if err != nil {
+		return nil, fmt.Errorf("查询原料失败: %v", err)
+	}
+
+	var material map[string]interface{}
+	err = json.Unmarshal(result, &material)
+	if err != nil {
+		return nil, err
+	}
+
+	return material, nil
+}
+
+// GetProductByID 查询产品
+func GetProductByID(productID string) (map[string]interface{}, error) {
+	result, err := contract.EvaluateTransaction("GetProductByID", productID)
+	if err != nil {
+		return nil, fmt.Errorf("查询产品失败: %v", err)
+	}
+
+	var product map[string]interface{}
+	err = json.Unmarshal(result, &product)
+	if err != nil {
+		return nil, err
+	}
+
+	return product, nil
+}
+
+// GetCompleteTrace 获取完整溯源信息
+func GetCompleteTrace(productID string) (map[string]interface{}, error) {
+	result, err := contract.EvaluateTransaction("GetCompleteTrace", productID)
+	if err != nil {
+		return nil, fmt.Errorf("查询溯源信息失败: %v", err)
+	}
+
+	var trace map[string]interface{}
+	err = json.Unmarshal(result, &trace)
+	if err != nil {
+		return nil, err
+	}
+
+	return trace, nil
+}
+
+// QueryHistory 查询资产历史
+func QueryHistory(assetID string) ([]map[string]interface{}, error) {
+	result, err := contract.EvaluateTransaction("QueryHistory", assetID)
+	if err != nil {
+		return nil, fmt.Errorf("查询历史失败: %v", err)
+	}
+
+	var history []map[string]interface{}
+	err = json.Unmarshal(result, &history)
+	if err != nil {
+		return nil, err
+	}
+
+	return history, nil
+}
+
+// GetTransferRecords 获取流转记录
+func GetTransferRecords(assetID string) ([]map[string]interface{}, error) {
+	result, err := contract.EvaluateTransaction("GetTransferRecords", assetID)
+	if err != nil {
+		return nil, fmt.Errorf("查询流转记录失败: %v", err)
+	}
+
+	var records []map[string]interface{}
+	err = json.Unmarshal(result, &records)
+	if err != nil {
+		return nil, err
+	}
+
+	return records, nil
+}

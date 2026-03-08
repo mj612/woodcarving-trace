@@ -1,0 +1,101 @@
+name: "woodcarving-network"
+version: "1.0"
+
+client:
+  organization: Org1
+  logging:
+    level: info
+  cryptoconfig:
+    path: ${FABRIC_CFG_PATH}/crypto-config
+  credentialStore:
+    path: /tmp/state-store
+    cryptoStore:
+      path: /tmp/msp
+  BCCSP:
+    security:
+      enabled: true
+      default:
+        provider: "SW"
+      hashAlgorithm: "SHA2"
+      softVerify: true
+      level: 256
+  tlsCerts:
+    systemCertPool: false
+
+channels:
+  woodcarving-channel:
+    orderers:
+      - orderer.woodcarving.com
+    peers:
+      peer0.org1.woodcarving.com:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true
+      peer0.org2.woodcarving.com:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true
+
+organizations:
+  Org1:
+    mspid: Org1MSP
+    cryptoPath: peerOrganizations/org1.woodcarving.com/users/Admin@org1.woodcarving.com/msp
+    peers:
+      - peer0.org1.woodcarving.com
+    certificateAuthorities:
+      - ca.org1.woodcarving.com
+
+  Org2:
+    mspid: Org2MSP
+    cryptoPath: peerOrganizations/org2.woodcarving.com/users/Admin@org2.woodcarving.com/msp
+    peers:
+      - peer0.org2.woodcarving.com
+    certificateAuthorities:
+      - ca.org2.woodcarving.com
+
+orderers:
+  orderer.woodcarving.com:
+    url: localhost:7050
+    grpcOptions:
+      ssl-target-name-override: orderer.woodcarving.com
+      grpc-max-send-message-length: 15
+    tlsCACerts:
+      path: ${FABRIC_CFG_PATH}/crypto-config/ordererOrganizations/woodcarving.com/tlsca/tlsca.woodcarving.com-cert.pem
+
+peers:
+  peer0.org1.woodcarving.com:
+    url: localhost:7051
+    grpcOptions:
+      ssl-target-name-override: peer0.org1.woodcarving.com
+      grpc.http2.keepalive_time: 15
+    tlsCACerts:
+      path: ${FABRIC_CFG_PATH}/crypto-config/peerOrganizations/org1.woodcarving.com/tlsca/tlsca.org1.woodcarving.com-cert.pem
+
+  peer0.org2.woodcarving.com:
+    url: localhost:9051
+    grpcOptions:
+      ssl-target-name-override: peer0.org2.woodcarving.com
+      grpc.http2.keepalive_time: 15
+    tlsCACerts:
+      path: ${FABRIC_CFG_PATH}/crypto-config/peerOrganizations/org2.woodcarving.com/tlsca/tlsca.org2.woodcarving.com-cert.pem
+
+certificateAuthorities:
+  ca.org1.woodcarving.com:
+    url: http://localhost:7054
+    httpOptions:
+      verify: false
+    registrar:
+      enrollId: admin
+      enrollSecret: adminpw
+    caName: ca.org1.woodcarving.com
+
+  ca.org2.woodcarving.com:
+    url: http://localhost:8054
+    httpOptions:
+      verify: false
+    registrar:
+      enrollId: admin
+      enrollSecret: adminpw
+    caName: ca.org2.woodcarving.com

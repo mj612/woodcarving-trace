@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>环境变量测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #409EFF;
+            padding-bottom: 10px;
+        }
+        .env-item {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #409EFF;
+        }
+        .env-name {
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .env-value {
+            font-family: 'Courier New', monospace;
+            color: #333;
+            font-size: 14px;
+            word-break: break-all;
+        }
+        .status {
+            padding: 10px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .status.success {
+            background: #f0f9ff;
+            border: 1px solid #67C23A;
+            color: #67C23A;
+        }
+        .status.error {
+            background: #fef0f0;
+            border: 1px solid #F56C6C;
+            color: #F56C6C;
+        }
+        .test-button {
+            background: #409EFF;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+        .test-button:hover {
+            background: #66b1ff;
+        }
+        .test-result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 4px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🔧 环境变量测试页面</h1>
+        
+        <div class="env-item">
+            <div class="env-name">VUE_APP_API_BASE_URL (API请求基础URL)</div>
+            <div class="env-value" id="apiBaseUrl">加载中...</div>
+        </div>
+        
+        <div class="env-item">
+            <div class="env-name">VUE_APP_SERVER_URL (静态文件服务器URL)</div>
+            <div class="env-value" id="serverUrl">加载中...</div>
+        </div>
+        
+        <div id="status" class="status"></div>
+        
+        <button class="test-button" onclick="testAPI()">测试 API 连接</button>
+        
+        <div id="testResult" class="test-result"></div>
+        
+        <h2>说明</h2>
+        <ul>
+            <li><strong>VUE_APP_API_BASE_URL</strong> 应该是: <code>http://localhost:3000/api/v1</code></li>
+            <li><strong>VUE_APP_SERVER_URL</strong> 应该是: <code>http://localhost:3000</code></li>
+            <li>如果值不正确，请停止前端服务，然后重新启动</li>
+            <li>修改 .env 文件后必须重启服务才能生效</li>
+        </ul>
+        
+        <h2>如何修复</h2>
+        <ol>
+            <li>停止前端服务（在命令行窗口按 Ctrl+C）</li>
+            <li>确认 <code>frontend/.env.development</code> 文件内容正确</li>
+            <li>重新启动前端服务（<code>npm run serve</code>）</li>
+            <li>清除浏览器缓存（Ctrl+Shift+Delete）</li>
+            <li>刷新此页面（Ctrl+F5）</li>
+        </ol>
+    </div>
+
+    <script>
+        // 注意：这个页面是静态HTML，无法直接访问 process.env
+        // 需要通过 Vue 应用来注入环境变量
+        // 这里只是一个示例页面
+        
+        document.getElementById('apiBaseUrl').textContent = '此页面无法直接访问环境变量';
+        document.getElementById('serverUrl').textContent = '请在 Vue 应用中的控制台执行: console.log(process.env)';
+        
+        const statusDiv = document.getElementById('status');
+        statusDiv.className = 'status error';
+        statusDiv.innerHTML = `
+            <strong>⚠️ 注意</strong><br>
+            此页面是静态HTML，无法直接访问 Vue 的环境变量。<br>
+            请在主应用（http://localhost:8080）的浏览器控制台中执行：<br>
+            <code>console.log('API_BASE_URL:', process.env.VUE_APP_API_BASE_URL)</code><br>
+            <code>console.log('SERVER_URL:', process.env.VUE_APP_SERVER_URL)</code>
+        `;
+        
+        function testAPI() {
+            const resultDiv = document.getElementById('testResult');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<p>正在测试...</p>';
+            
+            // 测试后端健康检查
+            fetch('http://localhost:3000/health')
+                .then(response => response.json())
+                .then(data => {
+                    resultDiv.innerHTML = `
+                        <p><strong>✓ 后端服务正常</strong></p>
+                        <p>响应: ${JSON.stringify(data)}</p>
+                    `;
+                })
+                .catch(error => {
+                    resultDiv.innerHTML = `
+                        <p><strong>✗ 后端服务连接失败</strong></p>
+                        <p>错误: ${error.message}</p>
+                        <p>请确认后端服务是否在运行（端口3000）</p>
+                    `;
+                });
+        }
+    </script>
+</body>
+</html>

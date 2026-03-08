@@ -1,0 +1,30 @@
+app:
+  name: "木雕溯源系统"
+  port: "3000"
+  mode: "debug"  # debug 或 release
+
+database:
+  host: "localhost"
+  port: "3306"
+  user: "root"
+  password: "root123"
+  dbname: "woodcarving_trace"
+  charset: "utf8mb4"
+
+redis:
+  host: "localhost"
+  port: "6379"
+  password: ""
+  db: 0
+
+fabric:
+  enabled: false  # 设置为 true 启用 Fabric 区块链
+  config_path: "../deploy/connection-profile.yaml"
+  channel_name: "woodcarving-channel"
+  chaincode_name: "woodcarving-trace"
+  org_name: "Org1"
+  user_name: "Admin"
+
+jwt:
+  secret: "woodcarving-secret-key-2024"
+  expire_time: 86400  # 24小时
